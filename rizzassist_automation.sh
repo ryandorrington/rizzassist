@@ -62,8 +62,8 @@ press_key() {
 SCREENSHOT_COUNT=1
 
 # Main loop - repeat the entire process 10 times
-for loop in {1..10}; do
-  echo "Starting iteration $loop of 10..."
+for loop in {1..5}; do
+  echo "Starting iteration $loop of 100..."
   
   # Create a new timestamped folder for this iteration
   TIMESTAMP=$(date "+%Y%m%d_%H%M%S")
@@ -74,10 +74,16 @@ for loop in {1..10}; do
   }
   echo "Created folder: $TARGET_FOLDER"
   
+  # Create screenshots subdirectory
+  SCREENSHOTS_DIR="$TARGET_FOLDER/screenshots"
+  mkdir -p "$SCREENSHOTS_DIR" || {
+    echo "Error: Unable to create screenshots directory. Exiting."
+    exit 1
+  }
+  echo "Created screenshots directory: $SCREENSHOTS_DIR"
+  
   # Take the initial screenshot after 2 second delay
-  INITIAL_SCREENSHOT_PATH="$TARGET_FOLDER/screenshot_$SCREENSHOT_COUNT.png"
-  echo "Waiting 2 seconds before taking initial screenshot..."
-  sleep 2
+  INITIAL_SCREENSHOT_PATH="$SCREENSHOTS_DIR/screenshot_$SCREENSHOT_COUNT.png"
 
   echo "Taking initial screenshot: $INITIAL_SCREENSHOT_PATH"
   take_screenshot "$INITIAL_SCREENSHOT_PATH"
@@ -93,7 +99,7 @@ for loop in {1..10}; do
     echo "Pressing down arrow (iteration $i)."
     press_key 125  # key code for Down arrow
 
-    NEXT_SCREENSHOT_PATH="$TARGET_FOLDER/screenshot_$SCREENSHOT_COUNT.png"
+    NEXT_SCREENSHOT_PATH="$SCREENSHOTS_DIR/screenshot_$SCREENSHOT_COUNT.png"
     echo "Taking screenshot: $NEXT_SCREENSHOT_PATH"
     take_screenshot "$NEXT_SCREENSHOT_PATH"
     ((SCREENSHOT_COUNT++))
@@ -119,4 +125,4 @@ for loop in {1..10}; do
   sleep 3
 done
 
-echo "Automation complete. All screenshots are in $TARGET_FOLDER."
+echo "Automation complete. All screenshots are in $SCREENSHOTS_DIR."
