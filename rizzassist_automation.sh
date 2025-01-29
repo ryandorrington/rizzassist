@@ -122,7 +122,7 @@ for loop in {1..5}; do
   echo "Completed iteration $loop of 10"
   
   # Add a longer pause between iterations
-  sleep 3
+  sleep 0.5
 done
 
 echo "Automation complete. All screenshots are in $SCREENSHOTS_DIR."
