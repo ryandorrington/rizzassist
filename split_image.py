@@ -1,8 +1,20 @@
 import os
-from PIL import Image
+from PIL import Image # type: ignore
+from pathlib import Path
+from typing import Union
 
 
-def split_image(input_path, output_dir='split_images'):
+def split_image(input_path: Union[str, Path], output_dir: Union[str, Path] = 'split_images') -> None:
+    """Split an image horizontally into two equal parts.
+    
+    Args:
+        input_path: Path to the input image file
+        output_dir: Directory to save the split images
+        
+    Raises:
+        FileNotFoundError: If input_path doesn't exist
+        PIL.Image.Error: If there are issues processing the image
+    """
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -24,32 +36,4 @@ def split_image(input_path, output_dir='split_images'):
     left_half.save(os.path.join(output_dir, f"{base_name}_left.png"))
     right_half.save(os.path.join(output_dir, f"{base_name}_right.png"))
     
-    print(f"Split images saved in {output_dir}/")
-
-def process_profile_directories(profiles_dir='profiles'):
-    # Iterate through each subdirectory in profiles/
-    for subdir in os.listdir(profiles_dir):
-        subdir_path = os.path.join(profiles_dir, subdir)
-        
-        # Skip if not a directory
-        if not os.path.isdir(subdir_path):
-            continue
-            
-        # Path to screenshots directory
-        screenshots_dir = os.path.join(subdir_path, 'screenshots')
-        
-        # Skip if screenshots directory doesn't exist
-        if not os.path.exists(screenshots_dir):
-            continue
-            
-        # Create split_images directory within the subdirectory
-        split_images_dir = os.path.join(subdir_path, 'split_images')
-        
-        # Process each PNG file in screenshots directory
-        for filename in os.listdir(screenshots_dir):
-            if filename.lower().endswith('.png'):
-                input_path = os.path.join(screenshots_dir, filename)
-                split_image(input_path, split_images_dir)
-
-if __name__ == "__main__":
-    process_profile_directories()
+    print(f"Split images saved in {output_dir}/{base_name}")
