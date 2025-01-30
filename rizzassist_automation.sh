@@ -1,16 +1,34 @@
 #!/bin/bash
-#
-# rizzassist_automation.sh
-#
-# Creates a new folder inside profiles/ with a unique name based on
-# the current date-time, takes screenshots, simulates key presses with random pauses,
-# and finishes with a final left/right key press (90/10 distribution).
-#
 
-# 1. Ensure the target base folder exists (profiles/)
-BASE_FOLDER="profiles"
+# Check if APP is set
+if [ -z "$APP" ]; then
+    echo "Error: APP environment variable not set"
+    echo "Usage: APP=tinder ./rizzassist_automation.sh"
+    echo "   or: APP=bumble ./rizzassist_automation.sh"
+    exit 1
+fi
+
+# Set default ITERATIONS to 5 if not provided
+ITERATIONS="${ITERATIONS:-2}"
+
+# Check which app we're using and set appropriate values
+if [ "$APP" = "tinder" ]; then
+    ACTIONS=9
+    ACTION_KEY=49  # Space bar
+    SCREENSHOT_REGION="720,135,300,555"
+    BASE_FOLDER="tinder_profiles"
+elif [ "$APP" = "bumble" ]; then
+    ACTIONS=6
+    ACTION_KEY=125  # Down arrow
+    SCREENSHOT_REGION="460,185,880,585"
+    BASE_FOLDER="bumble_profiles"
+else
+    echo "Error: APP must be either 'tinder' or 'bumble'. Got: $APP"
+    exit 1
+fi
+
+# Ensure the target base folder exists
 if [ ! -d "$BASE_FOLDER" ]; then
-  echo "Base folder not found. Creating $BASE_FOLDER..."
   mkdir -p "$BASE_FOLDER" || {
     echo "Error: Unable to create base folder. Exiting."
     exit 1
@@ -43,9 +61,9 @@ activate_browser() {
 # Helper function for screenshots of specific region
 take_screenshot() {
   local output_path="$1"
+  local region="$2"
   activate_browser
-  # Region parameters: x=460, y=185, width=880 (1340-460), height=585 (770-185)
-  screencapture -x -R "460,185,880,585" "$output_path"
+  screencapture -x -R "$region" "$output_path"
 }
 
 # Helper function to simulate key presses using AppleScript
@@ -53,6 +71,7 @@ take_screenshot() {
 #  - 125 = Down arrow
 #  - 124 = Right arrow
 #  - 123 = Left arrow
+#  - 49 = Space bar
 press_key() {
   local key_code="$1"
   osascript -e "tell application \"System Events\" to key code $key_code"
@@ -61,9 +80,10 @@ press_key() {
 
 SCREENSHOT_COUNT=1
 
-# Main loop - repeat the entire process 10 times
-for loop in {1..5}; do
-  echo "Starting iteration $loop of 100..."
+
+# Main loop - repeat the entire process
+for loop in $(seq 1 $ITERATIONS); do
+  echo "Starting iteration $loop of $ITERATIONS..."
   
   # Create a new timestamped folder for this iteration
   TIMESTAMP=$(date "+%Y%m%d_%H%M%S")
@@ -82,26 +102,21 @@ for loop in {1..5}; do
   }
   echo "Created screenshots directory: $SCREENSHOTS_DIR"
   
-  # Take the initial screenshot after 2 second delay
-  INITIAL_SCREENSHOT_PATH="$SCREENSHOTS_DIR/screenshot_$SCREENSHOT_COUNT.png"
-
-  echo "Taking initial screenshot: $INITIAL_SCREENSHOT_PATH"
-  take_screenshot "$INITIAL_SCREENSHOT_PATH"
+  # Take the initial screenshot
+  SCREENSHOT_PATH="$SCREENSHOTS_DIR/screenshot_$SCREENSHOT_COUNT.png"
+  take_screenshot "$SCREENSHOT_PATH" "$SCREENSHOT_REGION"
   ((SCREENSHOT_COUNT++))
 
-  # Press down key six times, each followed by a screenshot
-  for i in {1..6}; do
+  # Perform the actions
+  for i in $(seq 1 $ACTIONS); do
+    press_key $ACTION_KEY
+
     # Add a small random interval between 0.25 and 0.5 seconds
     SLEEP_DURATION=$(random_sleep)
-    echo "Sleeping for $SLEEP_DURATION seconds before pressing down arrow."
     sleep "$SLEEP_DURATION"
 
-    echo "Pressing down arrow (iteration $i)."
-    press_key 125  # key code for Down arrow
-
-    NEXT_SCREENSHOT_PATH="$SCREENSHOTS_DIR/screenshot_$SCREENSHOT_COUNT.png"
-    echo "Taking screenshot: $NEXT_SCREENSHOT_PATH"
-    take_screenshot "$NEXT_SCREENSHOT_PATH"
+    SCREENSHOT_PATH="$SCREENSHOTS_DIR/screenshot_$SCREENSHOT_COUNT.png"
+    take_screenshot "$SCREENSHOT_PATH" "$SCREENSHOT_REGION"
     ((SCREENSHOT_COUNT++))
   done
 
@@ -119,9 +134,9 @@ for loop in {1..5}; do
   echo "Final action: Pressing RIGHT arrow"
   press_key 124  # key code for Right arrow
 
-  echo "Completed iteration $loop of 10"
+  echo "Completed iteration $loop of $ITERATIONS"
   
-  # Add a longer pause between iterations
+  # Add a pause between iterations
   sleep 0.5
 done
 
