@@ -1,4 +1,5 @@
-profiles/
+tinder_profiles/
+bumble_profiles/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
