@@ -2,12 +2,13 @@ import os
 from PIL import Image
 from typing import Union
 
-def stitch_images(subdir_path: str, single_width: int, single_height: int, max_images: int = 6) -> None:
+def stitch_images(subdir_path: str, images_directory: str, single_width: int, single_height: int, max_images: int = 6) -> None:
     """
     Stitch together images from a profile's pictures directory in a grid layout.
     
     Args:
         subdir_path: Path to the profile directory containing 'pictures' folder
+        images_directory: Path to the directory containing images to stitch
         single_width: Width of each individual image
         single_height: Height of each individual image
         max_images: Maximum number of images to include (6 or 9)
@@ -28,12 +29,11 @@ def stitch_images(subdir_path: str, single_width: int, single_height: int, max_i
     grid_width = single_width * cols
     grid_height = single_height * rows
     
-    pictures_dir = os.path.join(subdir_path, 'pictures')
-    if not os.path.exists(pictures_dir):
-        raise FileNotFoundError(f"Pictures directory not found: {pictures_dir}")
+    if not os.path.exists(images_directory):
+        raise FileNotFoundError(f"Images directory not found: {images_directory}")
     
     # Get all PNG files in the pictures directory
-    image_files = sorted([f for f in os.listdir(pictures_dir) if f.lower().endswith('.png')])
+    image_files = sorted([f for f in os.listdir(images_directory) if f.lower().endswith('.png')])
     if not image_files:
         return
     
@@ -43,7 +43,7 @@ def stitch_images(subdir_path: str, single_width: int, single_height: int, max_i
     # Place each image in the grid
     for idx, image_file in enumerate(image_files[:max_images]):
         # Open the image
-        img_path = os.path.join(pictures_dir, image_file)
+        img_path = os.path.join(images_directory, image_file)
         with Image.open(img_path) as img:
             # Calculate position in grid
             row = idx // 3  # 0 for first row, 1 for second row

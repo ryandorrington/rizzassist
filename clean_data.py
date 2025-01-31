@@ -8,8 +8,30 @@ from stitch_images import stitch_images
 
 def clean_tinder_data() -> None:
     """Process and organize Tinder profile data."""
-    # Placeholder for Tinder-specific data processing
-    pass
+    for subdir in os.listdir('tinder_profiles'):
+        subdir_path = os.path.join('tinder_profiles', subdir)
+        
+        print(subdir_path)
+        # Skip if not a directory
+        if not os.path.isdir(subdir_path):
+            continue
+            
+        # Path to screenshots directory
+        screenshots_dir = os.path.join(subdir_path, 'screenshots')
+        
+        # Skip if screenshots directory doesn't exist
+        if not os.path.exists(screenshots_dir):
+            continue
+        
+        find_duplicates(screenshots_dir, auto_remove=True)
+
+        # Only stitch images if stitched_profile.png doesn't exist
+        stitched_image_path = os.path.join(subdir_path, 'stitched_profile.png')
+        if not os.path.exists(stitched_image_path):
+            try:
+                stitch_images(subdir_path, screenshots_dir, single_width=600, single_height=1110, max_images=9)
+            except Exception as e:
+                print(f"Error stitching images for {subdir}: {e}")
 
 def clean_bumble_data() -> None:
     """Process and organize Bumble profile data.
@@ -61,7 +83,7 @@ def clean_bumble_data() -> None:
         stitched_image_path = os.path.join(subdir_path, 'stitched_profile.png')
         if not os.path.exists(stitched_image_path):
             try:
-                stitch_images(subdir_path, single_width=880, single_height=1170, max_images=6)
+                stitch_images(subdir_path, pictures_dir, single_width=880, single_height=1170, max_images=6)
             except Exception as e:
                 print(f"Error stitching images for {subdir}: {e}")
 

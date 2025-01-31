@@ -5,11 +5,11 @@ from collections import defaultdict
 from typing import Union
 from pathlib import Path
 
-def find_duplicates(split_images_dir: Union[str, Path], auto_remove: bool = False) -> None:
+def find_duplicates(images_directory: Union[str, Path], auto_remove: bool = False) -> None:
     """Find and optionally remove duplicate images in a directory.
     
     Args:
-        split_images_dir: Directory containing images to check for duplicates
+        images_directory: Directory containing images to check for duplicates
         auto_remove: If True, removes duplicate images keeping first occurrence
         
     Raises:
@@ -19,13 +19,13 @@ def find_duplicates(split_images_dir: Union[str, Path], auto_remove: bool = Fals
     # Dictionary to store hash -> [file_paths]
     hash_dict = defaultdict(list)
     
-    if not os.path.exists(split_images_dir):
-        raise FileNotFoundError(f"Directory not found: {split_images_dir}")
+    if not os.path.exists(images_directory):
+        raise FileNotFoundError(f"Directory not found: {images_directory}")
             
     # Process each image in the directory
-    for filename in os.listdir(split_images_dir):
+    for filename in os.listdir(images_directory):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            image_path = os.path.join(split_images_dir, filename)
+            image_path = os.path.join(images_directory, filename)
             try:
                 # Calculate image hash
                 with Image.open(image_path) as img:
