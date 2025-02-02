@@ -1,5 +1,6 @@
 tinder_profiles/
 bumble_profiles/
+profile_labels.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

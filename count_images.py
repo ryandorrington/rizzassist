@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from typing import Dict
 
 def count_profile_images(base_dir: str, target_dir: str) -> Dict[str, int]:
