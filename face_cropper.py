@@ -5,7 +5,7 @@ import numpy as np
 from typing import Tuple, Optional
 
 class FaceCropper:
-    def __init__(self, target_size: int = 256):
+    def __init__(self, target_size: int = 224):
         self.target_size = target_size
         self.mp_face_detection = mp.solutions.face_detection
         self.face_detection = self.mp_face_detection.FaceDetection(
@@ -50,7 +50,7 @@ class FaceCropper:
         x_center, y_center, face_w, face_h = face_bbox
         
         # Make crop region square and larger than the face
-        crop_size = int(max(face_w, face_h) * 1.8)  # Change 1.8 to desired multiplier
+        crop_size = int(max(face_w, face_h) * 2)  # Change 1.8 to desired multiplier
         
         # Calculate crop boundaries
         h, w = image.shape[:2]
