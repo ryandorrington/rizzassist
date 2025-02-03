@@ -1,14 +1,19 @@
+# Project specific
 tinder_profiles/
 bumble_profiles/
 profile_labels.csv
+cropped_tinder_profiles/
+cropped_bumble_profiles/
 
-# Byte-compiled / optimized / DLL files
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
-*.so
 
 # Distribution / packaging
 .Python
@@ -30,6 +35,40 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.coverage
+.tox/
+.pytest_cache/
+htmlcov/
+
+# Misc
+*.log
+*.pot
+*.pyc
+.cache
+.ruff_cache/
+.pytype/
+.mypy_cache/
+.pyre/
+
+# Byte-compiled / optimized / DLL files
+*.so
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -41,27 +80,15 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
-.pytest_cache/
 cover/
 
 # Translations
 *.mo
-*.pot
 
 # Django stuff:
-*.log
-local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
@@ -131,14 +158,28 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.dmypy.json
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+
+# PyPI configuration file
+.pypirc
 
 # Spyder project settings
 .spyderproject
@@ -153,7 +194,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 .dmypy.json
-dmypy.json
 
 # Pyre type checker
 .pyre/
@@ -176,3 +216,20 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Project specific
+profile_labels.csv
+*_cropped/
