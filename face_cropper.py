@@ -68,7 +68,7 @@ class FaceCropper:
 
 def process_directory(base_dir: str):
     """Process all images in directory and save face-centered crops."""
-    cropper = FaceCropper(target_size=256)
+    cropper = FaceCropper(target_size=224)
     
     # Create output directory
     output_dir = f'cropped_{os.path.basename(base_dir)}'
