@@ -4,6 +4,7 @@ bumble_profiles/
 profile_labels.csv
 cropped_tinder_profiles/
 cropped_bumble_profiles/
+processed_data/
 
 # macOS system files
 .DS_Store
