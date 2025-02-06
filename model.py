@@ -6,6 +6,7 @@ from tinygrad.tensor import Tensor
 from tinygrad import nn, GlobalCounters
 from tinygrad.helpers import fetch, trange
 from image_processor import load_batch
+import matplotlib.pyplot as plt
 
 
 class TransformerBlock:
@@ -74,13 +75,8 @@ class ViT:
         return x[:, 0].linear(*self.head).reshape(-1)  # Output shape changed to (batch_size,)
 
     def load_from_pretrained(self):
-        # https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
-        if self.embed_dim == 192:
-            url = "https://storage.googleapis.com/vit_models/augreg/Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz"
-        elif self.embed_dim == 768:
-           url = "https://storage.googleapis.com/vit_models/augreg/B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
-        else:
-            raise Exception("no pretrained weights for configuration")
+        url = "https://storage.googleapis.com/vit_models/augreg/B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
+        
         dat = np.load(fetch(url))
 
         #for x in dat.keys():
@@ -118,16 +114,13 @@ class ViT:
 
 
 if __name__ == "__main__":
-    if getenv("LARGE", 0) == 1:
-        model = ViT(embed_dim=768, num_heads=12)
-    else:
-        model = ViT(embed_dim=192, num_heads=3)
+    model = ViT(embed_dim=768, num_heads=12)
     model.load_from_pretrained()
-    opt = nn.optim.Adam(nn.state.get_parameters(model))
+    opt = nn.optim.AdamW(nn.state.get_parameters(model))
 
     # Load all batches
     X_all, Y_all, files_all = [], [], []
-    for i in range(78):
+    for i in range(113):
         X, Y, files = load_batch("processed_data", i)
         X_all.append(X)
         Y_all.append(Y) 
@@ -159,7 +152,7 @@ if __name__ == "__main__":
     @Tensor.train()
     def train_step() -> Tensor:
         opt.zero_grad()
-        samples = Tensor.randint(getenv("BS", 8), high=X_train.shape[0])
+        samples = Tensor.randint(getenv("BS", 32), high=X_train.shape[0])
         loss = (model(X_train[samples]) - Y_train[samples]).square().mean().backward()  # MSE loss
         opt.step()
         return loss
@@ -172,10 +165,25 @@ if __name__ == "__main__":
     for i in (t:=trange(getenv("STEPS", 1000))):
         GlobalCounters.reset()   # NOTE: this makes it nice for DEBUG=2 timing
         loss = train_step()
-        if i%10 == 9: test_mse = get_test_mse().item()
+        if i%100 == 99: test_mse = get_test_mse().item()
         t.set_description(f"loss: {loss.item():6.2f} test_mse: {test_mse:5.2f}")
 
-    # verify eval mse
-    if target := getenv("TARGET_EVAL_MSE", 0.0):
-        if test_mse <= target: print(colored(f"{test_mse=} <= {target}", "green"))
-        else: raise ValueError(colored(f"{test_mse=} > {target}", "red"))
+    # Save the trained model
+    nn.state.safe_save(nn.state.get_state_dict(model), "trained_model.safetensor")
+
+    # Display a random test image and model's prediction
+    test_idx = np.random.randint(len(X_test))
+    test_img = X_test[test_idx].numpy()
+    true_score = Y_test[test_idx].numpy()
+    pred_score = model(X_test[test_idx:test_idx+1]).numpy()[0]
+    test_file = files_test[test_idx]
+    
+    print(f"\nPrediction for {test_file}:")
+    print(f"Predicted score: {pred_score:.2f}")
+    print(f"True score: {true_score:.2f}")
+    
+    # plt.figure(figsize=(8, 8))
+    # plt.imshow(np.transpose(test_img, (1, 2, 0)))
+    # plt.title(f'Predicted Score: {pred_score:.2f}\nTrue Score: {true_score:.2f}')
+    # plt.axis('off')
+    # plt.show()
