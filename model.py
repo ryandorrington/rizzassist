@@ -6,7 +6,6 @@ from tinygrad.tensor import Tensor
 from tinygrad import nn, GlobalCounters
 from tinygrad.helpers import fetch, trange
 from image_processor import load_batch
-import matplotlib.pyplot as plt
 
 
 class TransformerBlock:
@@ -49,7 +48,7 @@ class TransformerBlock:
 
 
 class ViT:
-    def __init__(self, layers=12, embed_dim=192, num_heads=3):
+    def __init__(self, layers=12, embed_dim=768, num_heads=12):
         self.embedding = (Tensor.uniform(embed_dim, 3, 16, 16), Tensor.zeros(embed_dim))
         self.embed_dim = embed_dim
         self.cls = Tensor.ones(1, 1, embed_dim)
@@ -59,7 +58,7 @@ class ViT:
               prenorm=True, act=lambda x: x.gelu())
             for i in range(layers)]
         self.encoder_norm = (Tensor.uniform(embed_dim), Tensor.zeros(embed_dim))
-        self.head = (Tensor.uniform(embed_dim, 5), Tensor.zeros(5))  # Changed to output 5 classes
+        self.head = (Tensor.uniform(embed_dim, 5), Tensor.zeros(5))  # 5 classes (ratings 1-5)
 
     def patch_embed(self, x):
         x = x.conv2d(*self.embedding, stride=16)
@@ -181,8 +180,8 @@ if __name__ == "__main__":
     test_file = files_test[test_idx]
     
     print(f"\nPrediction for {test_file}:")
-    print(f"Predicted class: {pred_class} (confidence: {pred_probs[pred_class]:.2f})")
-    print(f"True class: {true_class}")
+    print(f"Predicted rating: {pred_class} (confidence: {pred_probs[pred_class-1]:.2f})")
+    print(f"True rating: {true_class}")
     
     # plt.figure(figsize=(8, 8))
     # plt.imshow(np.transpose(test_img, (1, 2, 0)))
