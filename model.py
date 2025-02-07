@@ -59,7 +59,7 @@ class ViT:
               prenorm=True, act=lambda x: x.gelu())
             for i in range(layers)]
         self.encoder_norm = (Tensor.uniform(embed_dim), Tensor.zeros(embed_dim))
-        self.head = (Tensor.uniform(embed_dim, 1), Tensor.zeros(1))  # Changed to output single value
+        self.head = (Tensor.uniform(embed_dim, 5), Tensor.zeros(5))  # Changed to output 5 classes
 
     def patch_embed(self, x):
         x = x.conv2d(*self.embedding, stride=16)
@@ -72,7 +72,7 @@ class ViT:
         x = ce.cat(pe, dim=1)
         x = x.add(self.pos_embedding).sequential(self.tbs)
         x = x.layernorm().linear(*self.encoder_norm)
-        return x[:, 0].linear(*self.head).reshape(-1)  # Output shape changed to (batch_size,)
+        return x[:, 0].linear(*self.head).softmax()  # Output shape (batch_size, 5) with softmax
 
     def load_from_pretrained(self):
         url = "https://storage.googleapis.com/vit_models/augreg/B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
@@ -153,20 +153,21 @@ if __name__ == "__main__":
     def train_step() -> Tensor:
         opt.zero_grad()
         samples = Tensor.randint(getenv("BS", 32), high=X_train.shape[0])
-        loss = (model(X_train[samples]) - Y_train[samples]).square().mean().backward()  # MSE loss
+        loss = model(X_train[samples]).cross_entropy(Y_train[samples]).backward()
         opt.step()
         return loss
     
     @TinyJit
     @Tensor.test()
-    def get_test_mse() -> Tensor: return (model(X_test) - Y_test).square().mean()  # MSE instead of accuracy
+    def get_test_accuracy() -> Tensor:
+        return (model(X_test).argmax(axis=1) == Y_test).mean()
 
-    test_mse = float('nan')
-    for i in (t:=trange(getenv("STEPS", 1000))):
+    test_accuracy = float('nan')
+    for i in (t:=trange(getenv("STEPS", 10000))):
         GlobalCounters.reset()   # NOTE: this makes it nice for DEBUG=2 timing
         loss = train_step()
-        if i%100 == 99: test_mse = get_test_mse().item()
-        t.set_description(f"loss: {loss.item():6.2f} test_mse: {test_mse:5.2f}")
+        if i%100 == 99: test_accuracy = get_test_accuracy().item()
+        t.set_description(f"loss: {loss.item():6.2f} test_acc: {test_accuracy:5.2f}")
 
     # Save the trained model
     nn.state.safe_save(nn.state.get_state_dict(model), "trained_model.safetensor")
@@ -174,16 +175,17 @@ if __name__ == "__main__":
     # Display a random test image and model's prediction
     test_idx = np.random.randint(len(X_test))
     test_img = X_test[test_idx].numpy()
-    true_score = Y_test[test_idx].numpy()
-    pred_score = model(X_test[test_idx:test_idx+1]).numpy()[0]
+    true_class = Y_test[test_idx].numpy()
+    pred_probs = model(X_test[test_idx:test_idx+1]).numpy()[0]
+    pred_class = pred_probs.argmax()
     test_file = files_test[test_idx]
     
     print(f"\nPrediction for {test_file}:")
-    print(f"Predicted score: {pred_score:.2f}")
-    print(f"True score: {true_score:.2f}")
+    print(f"Predicted class: {pred_class} (confidence: {pred_probs[pred_class]:.2f})")
+    print(f"True class: {true_class}")
     
     # plt.figure(figsize=(8, 8))
     # plt.imshow(np.transpose(test_img, (1, 2, 0)))
-    # plt.title(f'Predicted Score: {pred_score:.2f}\nTrue Score: {true_score:.2f}')
+    # plt.title(f'Predicted Class: {pred_class}\nTrue Class: {true_class}')
     # plt.axis('off')
     # plt.show()
