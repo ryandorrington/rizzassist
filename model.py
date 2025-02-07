@@ -71,7 +71,7 @@ class ViT:
         x = ce.cat(pe, dim=1)
         x = x.add(self.pos_embedding).sequential(self.tbs)
         x = x.layernorm().linear(*self.encoder_norm)
-        return x[:, 0].linear(*self.head).softmax()  # Output shape (batch_size, 5) with softmax
+        return x[:, 0].linear(*self.head).log_softmax()
 
     def load_from_pretrained(self):
         url = "https://storage.googleapis.com/vit_models/augreg/B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz"
@@ -128,14 +128,18 @@ if __name__ == "__main__":
     # Combine into single arrays
     X_all = np.concatenate(X_all)
     Y_all = np.concatenate(Y_all)
-    
-    # Split into train/test (80/20)
+
+    # Convert ratings from 1-5 to 0-4 for cross entropy
+    Y_all = Y_all[:,0].astype(np.int64) - 1  # Convert to int64 and subtract 1
+    assert np.all((Y_all >= 0) & (Y_all < 5)), "Labels must be in range 0-4"
+
+    # Split into train/test
     train_size = int(0.8 * len(X_all))
     indices = np.random.permutation(len(X_all))
     train_idx, test_idx = indices[:train_size], indices[train_size:]
-    
-    X_train, Y_train = Tensor(X_all[train_idx]), Tensor(Y_all[train_idx][:,0])
-    X_test, Y_test = Tensor(X_all[test_idx]), Tensor(Y_all[test_idx][:,0])
+
+    X_train, Y_train = Tensor(X_all[train_idx]), Tensor(Y_all[train_idx])
+    X_test, Y_test = Tensor(X_all[test_idx]), Tensor(Y_all[test_idx])
     files_train = [files_all[i] for i in train_idx]
     files_test = [files_all[i] for i in test_idx]
 
@@ -151,7 +155,7 @@ if __name__ == "__main__":
     @Tensor.train()
     def train_step() -> Tensor:
         opt.zero_grad()
-        samples = Tensor.randint(getenv("BS", 32), high=X_train.shape[0])
+        samples = Tensor.randint(getenv("BS", 8), high=X_train.shape[0])
         loss = model(X_train[samples]).cross_entropy(Y_train[samples]).backward()
         opt.step()
         return loss
