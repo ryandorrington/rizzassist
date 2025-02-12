@@ -117,7 +117,7 @@ if __name__ == "__main__":
     model.load_from_pretrained()
 
     # Use a smaller learning rate for fine-tuning
-    opt = nn.optim.AdamW(nn.state.get_parameters(model), lr=1e-5, weight_decay=1e-4)
+    opt = nn.optim.AdamW(nn.state.get_parameters(model), lr=1e-6, weight_decay=1e-4)
 
     # Load all batches
     X_all, Y_all, files_all = [], [], []
@@ -175,8 +175,11 @@ if __name__ == "__main__":
     for i in (t := trange(int(getenv("STEPS", 3000)))):
         GlobalCounters.reset()
         loss = train_step()
-        if i % 100 == 0:
+        if i % 10 == 0:
+            print(f"step={i}, train_loss={loss.item():.4f}")
+        if i % 500 == 0:
             mse_val = get_test_mse().item()
+            print(f"step={i}, train_loss={loss.item():.4f}, test_mse={mse_val:.4f}")
             t.set_description(f"step={i}, train_loss={loss.item():.4f}, test_mse={mse_val:.4f}")
 
     print("Done training! Saving model...")
